@@ -24,3 +24,7 @@ day4: Day4/main.cpp
 day5: Day5/main.cpp
 	$(CC) Day5/main.cpp $(CFLAGS) -o Day5/day5
 	Day5/day5
+
+day6: Day6/main.cpp
+	$(CC) Day6/main.cpp $(CFLAGS) -o Day6/day6
+	Day6/day6
