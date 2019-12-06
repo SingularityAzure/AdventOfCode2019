@@ -7,18 +7,37 @@ io::LogStream cout("day6.log");
 
 Array<char> inputData;
 
+struct Body;
+
+struct BodyIterator {
+    Body *it;
+    void operator++();
+    Body* operator*() { return it; }
+    bool operator!=(const BodyIterator& other) { return it != other.it; }
+};
+
 struct Body {
     Body *orbits = nullptr;
+
+    BodyIterator begin() {
+        return {this};
+    }
+    BodyIterator end() {
+        return {nullptr};
+    }
+
     i32 GetNumOrbits() {
         i32 result = -1; // We don't count ourself
-        Body *it = this;
-        while (it != nullptr) {
+        for ([[maybe_unused]]Body* body : *this) {
             result++;
-            it = it->orbits;
         }
         return result;
     }
 };
+
+void BodyIterator::operator++() {
+    it = it->orbits;
+}
 
 Map<String, Body*> bodies;
 
@@ -84,7 +103,42 @@ int main() {
     for (auto body : bodies) {
         totalOrbits += body.second->GetNumOrbits();
     }
-    cout << "Total number of orbits: " << totalOrbits << std::endl;
+    cout << "Total number of orbits (part 1): " << totalOrbits << std::endl;
+
+    Body *you = bodies["YOU"];
+    Body *san = bodies["SAN"];
+    Body *commonBody = nullptr;
+    Set<Body*> bodiesYouAreOrbiting;
+    for (Body* body : *you) {
+        bodiesYouAreOrbiting.emplace(body);
+    }
+    for (Body* body : *san) {
+        if (bodiesYouAreOrbiting.count(body) == 1) {
+            commonBody = body;
+            break;
+        }
+    }
+    if (commonBody == nullptr) {
+        cout << "Error: No common body found!" << std::endl;
+        return 1;
+    }
+
+    i32 numTransfers = -4; // Don't include YOU or SAN
+
+    for (Body* body : *you) {
+        numTransfers++;
+        if (body == commonBody) {
+            break;
+        }
+    }
+    for (Body* body : *san) {
+        numTransfers++;
+        if (body == commonBody) {
+            break;
+        }
+    }
+
+    cout << "Total number of transfers needed to get from YOU to SAN (part 2): " << numTransfers << std::endl;
 
     for (auto body : bodies) {
         delete body.second;
