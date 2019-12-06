@@ -1,5 +1,6 @@
 #include <AzCore/IO/LogStream.hpp>
 #include <AzCore/memory.hpp>
+#include <AzCore/Time.hpp>
 
 using namespace AzCore;
 
@@ -79,6 +80,7 @@ bool ReadInputData() {
 int main() {
 
     cout << "Day 6:" << std::endl;
+    ClockTime start = Clock::now();
 
     {
         FILE *file = fopen("Day6/input.txt", "rb");
@@ -139,6 +141,8 @@ int main() {
     }
 
     cout << "Total number of transfers needed to get from YOU to SAN (part 2): " << numTransfers << std::endl;
+
+    cout << "Total time taken: " << FormatTime(Clock::now() - start) << std::endl;
 
     for (auto body : bodies) {
         delete body.second;
