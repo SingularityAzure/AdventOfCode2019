@@ -29,11 +29,15 @@ i32 OpCount(i64 op) {
     }
 }
 
-i64 RunProgram(Array<i64> inputs) {
-    Array<i64> opcodes(program);
-    i64 lastOut = -1;
+struct Ret {
+    i64 output;
+    bool halt;
+};
 
-    for (i32 i = 0; opcodes[i] != 99;) {
+Ret RunProgram(Array<i64> &opcodes, i32 &i, Array<i64> inputs) {
+    Ret ret;
+    ret.halt = true;
+    for (; opcodes[i] != 99;) {
         i32 mode[3];
         i64 args[3];
         i32 op = opcodes[i] % 100;
@@ -50,11 +54,11 @@ i64 RunProgram(Array<i64> inputs) {
         if (op < 3 || op > 4) {
             if (!mode[0] && args[0] >= opcodes.size) {
                 ErrPtr(args[0]);
-                return -1;
+                return ret;
             }
             if (!mode[1] && args[1] >= opcodes.size) {
                 ErrPtr(args[1]);
-                return -1;
+                return ret;
             }
             lhs = mode[0] ? args[0] : opcodes[args[0]];
             rhs = mode[1] ? args[1] : opcodes[args[1]];
@@ -68,7 +72,6 @@ i64 RunProgram(Array<i64> inputs) {
             } break;
             case 3: {
                 if (inputs.size > 0) {
-                    cout << "Using " << inputs[0] << " as an input." << std::endl;
                     opcodes[args[0]] = inputs[0];
                     inputs.Erase(0);
                 } else {
@@ -81,11 +84,10 @@ i64 RunProgram(Array<i64> inputs) {
             } break;
             case 4: {
                 i64 out = mode[0] ? args[0] : opcodes[args[0]];
-                lastOut = out;
-                cout << "out: " << out << std::endl;
-                if (out && opcodes[i+2] != 99) {
-                    cout << "Error: Diagnostic failed at " << i << std::endl;
-                }
+                i += OpCount(4);
+                ret.output = out;
+                ret.halt = false;
+                return ret;
             } break;
             case 5: {
                 if (lhs) {
@@ -107,13 +109,18 @@ i64 RunProgram(Array<i64> inputs) {
             } break;
             default: {
                 cout << "Error: Unexpected opcode " << op << std::endl;
-                return -1;
+                return ret;
             } break;
         }
         i += OpCount(op);
     }
-    return lastOut;
+    return ret;
 }
+
+struct Amplifier {
+    Array<i64> opcodes = program;
+    i32 programPos = 0;
+};
 
 struct PhaseSettings {
     i64 phase[5];
@@ -134,11 +141,12 @@ int main() {
                     for (i32 e = 0; e < 5; e++) {
                         if (e == a || e == b || e == c || e == d) continue;
                         // What a stack!
-                        i64 outputA = RunProgram({a, 0});
-                        i64 outputB = RunProgram({b, outputA});
-                        i64 outputC = RunProgram({c, outputB});
-                        i64 outputD = RunProgram({d, outputC});
-                        i64 outputE = RunProgram({e, outputD});
+                        Amplifier amp[5];
+                        i64 outputA = RunProgram(amp[0].opcodes, amp[0].programPos, {a, 0}).output;
+                        i64 outputB = RunProgram(amp[1].opcodes, amp[1].programPos, {b, outputA}).output;
+                        i64 outputC = RunProgram(amp[2].opcodes, amp[2].programPos, {c, outputB}).output;
+                        i64 outputD = RunProgram(amp[3].opcodes, amp[3].programPos, {d, outputC}).output;
+                        i64 outputE = RunProgram(amp[4].opcodes, amp[4].programPos, {e, outputD}).output;
                         if (outputE > highestOutput) {
                             highestOutput = outputE;
                             highestSettings.phase[0] = a;
@@ -153,7 +161,57 @@ int main() {
         }
     }
 
-    cout << "Highest output:" << highestOutput << ", settings: ";
+    cout << "Highest output (part 1):" << highestOutput << ", settings: ";
+    for (i32 i = 0; i < 5; i++) {
+        cout << highestSettings.phase[i];
+    }
+    cout << std::endl;
+
+    highestOutput = -1;
+
+    for (i32 a = 5; a <= 9; a++) {
+        for (i32 b = 5; b <= 9; b++) {
+            if (b == a) continue;
+            for (i32 c = 5; c <= 9; c++) {
+                if (c == a || c == b) continue;
+                for (i32 d = 5; d <= 9; d++) {
+                    if (d == a || d == b || d == c) continue;
+                    for (i32 e = 5; e <= 9; e++) {
+                        if (e == a || e == b || e == c || e == d) continue;
+                        // Code duplication FTW
+                        Amplifier amp[5];
+                        i64 feedback = 0;
+                        bool first = true;
+                        typedef Array<i64> Ar;
+                        while (true) {
+                            i64 outputA = RunProgram(amp[0].opcodes, amp[0].programPos, first ? Ar({a, 0}) : Ar({feedback})).output;
+                            i64 outputB = RunProgram(amp[1].opcodes, amp[1].programPos, first ? Ar({b, outputA}) : Ar({outputA})).output;
+                            i64 outputC = RunProgram(amp[2].opcodes, amp[2].programPos, first ? Ar({c, outputB}) : Ar({outputB})).output;
+                            i64 outputD = RunProgram(amp[3].opcodes, amp[3].programPos, first ? Ar({d, outputC}) : Ar({outputC})).output;
+                            Ret outputE = RunProgram(amp[4].opcodes, amp[4].programPos, first ? Ar({e, outputD}) : Ar({outputD}));
+                            first = false;
+                            if (outputE.halt) {
+                                break;
+                            } else {
+                                feedback = outputE.output;
+                            }
+                        }
+
+                        if (feedback > highestOutput) {
+                            highestOutput = feedback;
+                            highestSettings.phase[0] = a;
+                            highestSettings.phase[1] = b;
+                            highestSettings.phase[2] = c;
+                            highestSettings.phase[3] = d;
+                            highestSettings.phase[4] = e;
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    cout << "Highest output (part 2):" << highestOutput << ", settings: ";
     for (i32 i = 0; i < 5; i++) {
         cout << highestSettings.phase[i];
     }
