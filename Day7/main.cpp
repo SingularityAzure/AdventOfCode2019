@@ -1,5 +1,6 @@
 #include <AzCore/basictypes.hpp>
 #include <AzCore/IO/LogStream.hpp>
+#include <AzCore/Time.hpp>
 
 using namespace AzCore;
 
@@ -127,6 +128,7 @@ struct PhaseSettings {
 };
 
 int main() {
+    ClockTime start = Clock::now();
     cout << "Day 7:" << std::endl;
     i64 highestOutput = -1;
     PhaseSettings highestSettings = {0, 0, 0, 0, 0};
@@ -216,6 +218,8 @@ int main() {
         cout << highestSettings.phase[i];
     }
     cout << std::endl;
+
+    cout << "Total time taken: " << FormatTime(Clock::now() - start) << std::endl;
 
     return 0;
 }
