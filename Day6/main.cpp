@@ -43,16 +43,11 @@ void BodyIterator::operator++() {
 Map<String, Body*> bodies;
 
 bool ReadInputData() {
-    for (i32 i = 0; i < inputData.size;) {
-        String body1 = "XXX", body2 = "XXX";
-        for (i32 j = 0; inputData[i] != ')'; i++, j++) {
-            body1[j] = inputData[i];
-        }
-        i++;
-        for (i32 j = 0; i < inputData.size && inputData[i] != '\n'; i++, j++) {
-            body2[j] = inputData[i];
-        }
-        i++;
+    Array<Range<char>> bodyRanges = SeparateByValues(&inputData, {')', '\n'});
+
+    for (i32 i = 0; i < bodyRanges.size; i+= 2) {
+        Range<char> &body1 = bodyRanges[i];
+        Range<char> &body2 = bodyRanges[i+1];
         Body *pBody1, *pBody2;
         if (bodies.count(body1) == 0) {
             pBody1 = new Body();
@@ -67,11 +62,12 @@ bool ReadInputData() {
             pBody2 = bodies[body2];
         }
         if (pBody2->orbits) {
-            cout << "Error: body " << body2 << " already has an orbit!" << std::endl;
+            cout << "Error: body " << String(body2) << " already has an orbit!" << std::endl;
             return false;
         }
         pBody2->orbits = pBody1;
     }
+
     return true;
 }
 
