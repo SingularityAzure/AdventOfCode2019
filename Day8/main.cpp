@@ -1,6 +1,7 @@
 #include <AzCore/basictypes.hpp>
 #include <AzCore/IO/LogStream.hpp>
 #include <AzCore/Time.hpp>
+#include <AzCore/memory.hpp>
 
 using namespace AzCore;
 
@@ -11,26 +12,14 @@ constexpr i32 pixelsPerLayer = width * height;
 
 Array<char> inputData;
 
-#include <cstdio>
-
 int main() {
     ClockTime start = Clock::now();
     cout << "Day 8:" << std::endl;
 
-    {
-        FILE *file = fopen("Day8/input.txt", "rb");
-        if (!file) {
-            cout << "Failed to get input data." << std::endl;
-            return 1;
-        }
-        fseek(file, 0, SEEK_END);
-        inputData.Resize(ftell(file));
-        fseek(file, 0, SEEK_SET);
-        if ((i32)fread(inputData.data, 1, inputData.size, file) != inputData.size) {
-            cout << "Didn't load whole file?" << std::endl;
-            return 1;
-        }
-        fclose(file);
+    inputData = FileContents("Day8/input.txt");
+    if (inputData.size == 0) {
+        cout << "Failed to retrieve file contents." << std::endl;
+        return 1;
     }
     i32 layers = inputData.size / pixelsPerLayer;
     cout << "There are " << layers << " layers." << std::endl;

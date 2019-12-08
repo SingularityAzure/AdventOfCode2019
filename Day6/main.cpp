@@ -75,27 +75,15 @@ bool ReadInputData() {
     return true;
 }
 
-#include <cstdio>
-
 int main() {
 
     cout << "Day 6:" << std::endl;
     ClockTime start = Clock::now();
 
-    {
-        FILE *file = fopen("Day6/input.txt", "rb");
-        if (!file) {
-            cout << "Failed to get input data." << std::endl;
-            return 1;
-        }
-        fseek(file, 0, SEEK_END);
-        inputData.Resize(ftell(file));
-        fseek(file, 0, SEEK_SET);
-        if ((i32)fread(inputData.data, 1, inputData.size, file) != inputData.size) {
-            cout << "Didn't load whole file?" << std::endl;
-            return 1;
-        }
-        fclose(file);
+    inputData = FileContents("Day6/input.txt");
+    if (inputData.size == 0) {
+        cout << "Failed to retrieve file contents." << std::endl;
+        return 1;
     }
     if (!ReadInputData()) {
         return 1;
