@@ -27,17 +27,11 @@ int main() {
     i32 minLayer = -1;
     i32 minMultiple = 0;
     for (i32 i = 0; i < layers; i++) {
-        i32 numZeroes = 0;
-        i32 numOnes = 0;
-        i32 numTwos = 0;
-        for (i32 j = i * pixelsPerLayer; j < (i+1)*pixelsPerLayer; j++) {
-            if (inputData[j] == '0') numZeroes++;
-            if (inputData[j] == '1') numOnes++;
-            if (inputData[j] == '2') numTwos++;
-        }
+        Range<char> layer = inputData.GetRange(i * pixelsPerLayer, pixelsPerLayer);
+        i32 numZeroes = layer.Count('0');
         if (numZeroes < minZeroes) {
             minZeroes = numZeroes;
-            minMultiple = numOnes*numTwos;
+            minMultiple = layer.Count('1') * layer.Count('2');
             minLayer = i;
         }
     }

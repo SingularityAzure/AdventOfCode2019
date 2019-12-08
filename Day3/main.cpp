@@ -11,6 +11,7 @@ using namespace AzCore;
 io::LogStream cout("day3.log");
 
 enum {
+    DIR_INVALID=0,
     DIR_UP=1,
     DIR_DOWN=2,
     DIR_RIGHT=3,
@@ -22,19 +23,22 @@ struct move {
     u16 direction;
 };
 
+ArrayList<u16> charToMoveMap;
+
+vec2i movements[5] = {
+    { 0, 0},
+    { 0, 1},
+    { 0,-1},
+    {-1, 0},
+    { 1, 0}
+};
+
 Array<move> GetMoves(const char *text) {
     Array<move> moves;
     for (i32 i = 0; text[i] != 0;) {
         move thisMove{0};
-        if (text[i] == 'U') {
-            thisMove.direction = DIR_UP;
-        } else if (text[i] == 'D') {
-            thisMove.direction = DIR_DOWN;
-        } else if (text[i] == 'R') {
-            thisMove.direction = DIR_RIGHT;
-        } else if (text[i] == 'L') {
-            thisMove.direction = DIR_LEFT;
-        } else {
+        thisMove.direction = charToMoveMap[text[i]];
+        if (thisMove.direction == DIR_INVALID) {
             cout << "Error: Unexpected direction " << text[i] << std::endl;
             return {};
         }
@@ -63,17 +67,7 @@ Array<line> Lines(Array<move> &moves) {
     i32 stepsTaken = 0;
 
     for (move m : moves) {
-        if (m.direction == DIR_UP) {
-            pos.y += m.distance;
-        } else if (m.direction == DIR_DOWN) {
-            pos.y -= m.distance;
-        } else if (m.direction == DIR_LEFT) {
-            pos.x -= m.distance;
-        } else if (m.direction == DIR_RIGHT) {
-            pos.x += m.distance;
-        } else {
-            cout << "Error: Unexpected direction " << m.direction << std::endl;
-        }
+        pos += movements[m.direction] * m.distance;
         lines.Append({posPrev, pos, stepsTaken});
         stepsTaken += m.distance;
         posPrev = pos;
@@ -122,6 +116,11 @@ Array<intersect> Intersections(Array<line> &lines1, Array<line> &lines2) {
 int main() {
     cout << "Day 3:" << std::endl;
     ClockTime start = Clock::now();
+    charToMoveMap.outOfBoundsValue = DIR_INVALID;
+    charToMoveMap.Set('U', DIR_UP);
+    charToMoveMap.Set('D', DIR_DOWN);
+    charToMoveMap.Set('L', DIR_LEFT);
+    charToMoveMap.Set('R', DIR_RIGHT);
     Array<move> wire1Moves = GetMoves(wire1);
     Array<move> wire2Moves = GetMoves(wire2);
 
