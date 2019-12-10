@@ -1,9 +1,9 @@
-CC = g++ -O2
+CC = g++ -g
 CFLAGS = -std=c++17 -L/home/singularity/lib -lAzCoreLinux
 
-.PHONY: all day1 day2 day3 day4 day5 day6 day7 day8 day9
+.PHONY: all day1 day2 day3 day4 day5 day6 day7 day8 day9 day10
 
-all: day1 day2 day3 day4 day5 day6 day7 day8 day9
+all: day1 day2 day3 day4 day5 day6 day7 day8 day9 day10
 
 day1: Day1/main.cpp
 	$(CC) Day1/main.cpp $(CFLAGS) -o Day1/day1
@@ -40,3 +40,7 @@ day8: Day8/main.cpp
 day9: Day9/main.cpp
 	$(CC) Day9/main.cpp $(CFLAGS) -o Day9/day9
 	Day9/day9
+
+day10: Day10/main.cpp
+	$(CC) Day10/main.cpp $(CFLAGS) -o Day10/day10
+	Day10/day10
