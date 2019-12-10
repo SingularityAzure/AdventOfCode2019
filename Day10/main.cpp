@@ -32,14 +32,14 @@ i32 GreatestCommonDivisor(i32 a, i32 b) {
     return a << shift;
 }
 
-bool LineIsOccluded(vec2i origin, vec2i target) {
+vec2i LineAsteroid(vec2i origin, vec2i target) {
     vec2i deltaP = target-origin;
     vec2i step = deltaP / GreatestCommonDivisor(deltaP.x, deltaP.y);
-    for (vec2i pos = origin + step; pos != target; pos += step) {
+    for (vec2i pos = origin + step; pos.x == median(pos.x, 0, asteroids[0].size-1) && pos.y == median(pos.y, 0, asteroids.size-1); pos += step) {
         if (asteroids[pos.y][pos.x] == '#')
-            return true;
+            return pos;
     }
-    return false;
+    return {-1, -1};
 }
 
 i32 GetLineOfSightCount(vec2i origin) {
@@ -51,7 +51,7 @@ i32 GetLineOfSightCount(vec2i origin) {
             vec2i pos = {x, y};
             if (pos == origin)
                 continue;
-            if (!LineIsOccluded(origin, pos))
+            if (pos == LineAsteroid(origin, pos))
                 count++;
         }
     }
@@ -81,6 +81,48 @@ Asteroid GetBestAsteroid() {
     return bestAsteroid;
 }
 
+void RotateClockwise(vec2i &facing, vec2i origin) {
+    Angle32 angle = atan2((f32)facing.y, (f32)facing.x);
+    vec2i nextPoint;
+    Radians32 bestDiff = tau;
+
+    // Brute force
+    for (i32 y = 0; y < asteroids.size; y++) {
+        for (i32 x = 0; x < asteroids[y].size; x++) {
+            if (origin == vec2i(x, y))
+                continue;
+            if (asteroids[y][x] != '#')
+                continue;
+            Angle32 pointAngle = atan2((f32)(y-origin.y), (f32)(x-origin.x));
+            Radians32 diff = angleDiff(angle, pointAngle);
+            if (diff.value() > 0.0 && diff < bestDiff) {
+                bestDiff = diff;
+                nextPoint = {x, y};
+            }
+        }
+    }
+    facing = nextPoint-origin;
+}
+
+Asteroid Find200thAsteroidDestroyed(Asteroid destroyer) {
+    Asteroid result;
+    i32 count = 0;
+    vec2i facing = {0, -1};
+    while (count < 200) {
+        vec2i shot = LineAsteroid(destroyer.pos, destroyer.pos+facing);
+        // cout << "Shot at " << shot.x << " " << shot.y << std::endl;
+        if (shot.x > -1) {
+            asteroids[shot.y][shot.x] = 'x';
+            count++;
+            if (count == 200) {
+                result.pos = shot;
+            }
+        }
+        RotateClockwise(facing, destroyer.pos);
+    }
+    return result;
+}
+
 int main() {
     cout << "Day 10:" << std::endl;
     ClockTime start = Clock::now();
@@ -95,6 +137,10 @@ int main() {
 
     Asteroid bestAsteroid = GetBestAsteroid();
     cout << "Part 1: The best asteroid, {" << bestAsteroid.pos.x << ", " << bestAsteroid.pos.y << "} has " << bestAsteroid.losCount << " asteroids in its line of sight." << std::endl;
+
+    Asteroid asteroid200 = Find200thAsteroidDestroyed(bestAsteroid);
+
+    cout << "Part 2: The 200th asteroid destroyed by the laser is at " << asteroid200.pos.x << " " << asteroid200.pos.y << std::endl;
 
     cout << "Total time taken: " << FormatTime(Clock::now() - start) << std::endl;
     return 0;
