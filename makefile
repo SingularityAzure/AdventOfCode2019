@@ -1,45 +1,45 @@
-CC = g++ -O3
+CC = g++ -O2
 CFLAGS = -std=c++17 -L/home/singularity/lib -lAzCoreLinux
 
-.PHONY: all day1 day2 day3 day4 day5 day6 day7 day8 day9 day10 day11 day12
+.PHONY: all day01 day02 day03 day04 day05 day06 day07 day08 day09 day10 day11 day12
 
-all: day1 day2 day3 day4 day5 day6 day7 day8 day9 day10 day11 day12
+all: day01 day02 day03 day04 day05 day06 day07 day08 day09 day10 day11 day12
 
-day1: Day1/main.cpp
-	$(CC) Day1/main.cpp $(CFLAGS) -o Day1/day1
-	Day1/day1
+day01: Day01/main.cpp
+	$(CC) Day01/main.cpp $(CFLAGS) -o Day01/day01
+	Day01/day01
 
-day2: Day2/main.cpp
-	$(CC) Day2/main.cpp $(CFLAGS) -o Day2/day2
-	Day2/day2
+day02: Day02/main.cpp
+	$(CC) Day02/main.cpp $(CFLAGS) -o Day02/day02
+	Day02/day02
 
-day3: Day3/main.cpp Day3/movements.c
-	$(CC) Day3/main.cpp $(CFLAGS) -o Day3/day3
-	Day3/day3
+day03: Day03/main.cpp Day03/movements.c
+	$(CC) Day03/main.cpp $(CFLAGS) -o Day03/day03
+	Day03/day03
 
-day4: Day4/main.cpp
-	$(CC) Day4/main.cpp $(CFLAGS) -o Day4/day4
-	Day4/day4
+day04: Day04/main.cpp
+	$(CC) Day04/main.cpp $(CFLAGS) -o Day04/day04
+	Day04/day04
 
-day5: Day5/main.cpp
-	$(CC) Day5/main.cpp $(CFLAGS) -o Day5/day5
-	Day5/day5
+day05: Day05/main.cpp
+	$(CC) Day05/main.cpp $(CFLAGS) -o Day05/day05
+	Day05/day05
 
-day6: Day6/main.cpp
-	$(CC) Day6/main.cpp $(CFLAGS) -o Day6/day6
-	Day6/day6
+day06: Day06/main.cpp
+	$(CC) Day06/main.cpp $(CFLAGS) -o Day06/day06
+	Day06/day06
 
-day7: Day7/main.cpp
-	$(CC) Day7/main.cpp $(CFLAGS) -o Day7/day7
-	Day7/day7
+day07: Day07/main.cpp
+	$(CC) Day07/main.cpp $(CFLAGS) -o Day07/day07
+	Day07/day07
 
-day8: Day8/main.cpp
-	$(CC) Day8/main.cpp $(CFLAGS) -o Day8/day8
-	Day8/day8
+day08: Day08/main.cpp
+	$(CC) Day08/main.cpp $(CFLAGS) -o Day08/day08
+	Day08/day08
 
-day9: Day9/main.cpp
-	$(CC) Day9/main.cpp $(CFLAGS) -o Day9/day9
-	Day9/day9
+day09: Day09/main.cpp
+	$(CC) Day09/main.cpp $(CFLAGS) -o Day09/day09
+	Day09/day09
 
 day10: Day10/main.cpp
 	$(CC) Day10/main.cpp $(CFLAGS) -o Day10/day10

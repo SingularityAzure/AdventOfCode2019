@@ -76,7 +76,7 @@ int main() {
     cout << "Day 6:" << std::endl;
     ClockTime start = Clock::now();
 
-    inputData = FileContents("Day6/input.txt");
+    inputData = FileContents("Day06/input.txt");
     if (inputData.size == 0) {
         cout << "Failed to retrieve file contents." << std::endl;
         return 1;
