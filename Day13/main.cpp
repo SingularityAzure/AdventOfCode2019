@@ -251,23 +251,21 @@ int main() {
 
     program.Reset();
     program.opcodes[0] = 2; // Our two quarters >:)
-    io::RawInput rawInput;
-    if (!rawInput.Init(io::RAW_INPUT_ENABLE_GAMEPAD_BIT)) {
-        cout << "Error initting rawInput: " << io::error << std::endl;
-        return 1;
-    }
-    if (rawInput.gamepads.size < 1) {
-        cout << "Gotta use a gamepad to play." << std::endl;
-        return 1;
-    }
-    io::Gamepad &gamepad = rawInput.gamepads[0];
-    bool playing = false;
+    i32 ballX, paddleX;
+    // bool playing = false;
     while (true) {
-        rawInput.Update(0.05);
         i64 input = 0;
-        if (gamepad.Down(KC_GP_AXIS_LS_LEFT)) {
+        for (i32 i = 0; i < board.size; i++) {
+            if (board[i] == TILE_BALL) {
+                ballX = i % width;
+            }
+            if (board[i] == TILE_PADDLE) {
+                paddleX = i % width;
+            }
+        }
+        if (ballX < paddleX) {
             input = -1;
-        } else if (gamepad.Down(KC_GP_AXIS_LS_RIGHT)) {
+        } else if (ballX > paddleX) {
             input = 1;
         }
         Ret ret;
@@ -296,17 +294,19 @@ int main() {
         } else {
             board[y*width+x] = tile;
         }
-        if (playing) {
-            DrawBoard();
-            Thread::Sleep(Milliseconds(50));
-        } else {
-            if (tile == TILE_BALL && y == 16) {
-                playing = true;
-                DrawBoard();
-            }
-        }
+        // if (playing) {
+        //     DrawBoard();
+        //     Thread::Sleep(Milliseconds(20));
+        // } else {
+        //     if (tile == TILE_BALL && y == 16) {
+        //         playing = true;
+        //         DrawBoard();
+        //     }
+        // }
         if (ret.halt) break;
     }
+    cout << "Part 2: Score: " << score << std::endl;
+
     cout << "Total time taken: " << FormatTime(Clock::now() - start) << std::endl;
 
     return 0;

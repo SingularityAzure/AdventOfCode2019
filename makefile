@@ -54,5 +54,5 @@ day12: Day12/main.cpp
 	Day12/day12
 
 day13: Day13/main.cpp
-	$(CC) Day13/main.cpp $(CFLAGS) -lvulkan -lxcb -lxkbcommon -lxkbcommon-x11 -lxcb-xkb -o Day13/day13
+	$(CC) Day13/main.cpp $(CFLAGS) -o Day13/day13
 	Day13/day13
