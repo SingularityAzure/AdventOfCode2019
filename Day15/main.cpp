@@ -175,13 +175,18 @@ Ret RunProgram(Program &program) {
 enum Tile {
     TILE_UNKNOWN=0,
     TILE_EMPTY=1,
-    TILE_START=2,
-    TILE_WALL=3,
-    TILE_DROID=4,
-    TILE_OXYGEN_SYSTEM=5
+    TILE_VISITED=2,
+    TILE_START=3,
+    TILE_WALL=4,
+    TILE_DROID=5,
+    TILE_OXYGEN_SYSTEM=6
 };
 
-const char tileChar[] = " .x#DS";
+bool Traversible(Tile tile) {
+    return tile == TILE_EMPTY || tile == TILE_START || tile == TILE_OXYGEN_SYSTEM;
+}
+
+const char tileChar[] = " .ox#DS";
 
 const i32 width = 64, height = 48;
 
@@ -217,6 +222,21 @@ enum Move {
     MOVE_RIGHT=4
 };
 
+i64 InvertMove(i64 a) {
+    switch (a) {
+        case MOVE_UP:
+            return MOVE_DOWN;
+        case MOVE_DOWN:
+            return MOVE_UP;
+        case MOVE_LEFT:
+            return MOVE_RIGHT;
+        case MOVE_RIGHT:
+            return MOVE_LEFT;
+        default:
+            return 0;
+    }
+}
+
 vec2i moveDirs[] = {
     { 0, 0},
     { 0,-1},
@@ -234,65 +254,53 @@ enum Status {
 struct Droid {
     Program program;
     vec2i pos;
+    bool showProgress = false;
     void Reset() {
         program.Reset();
         pos = vec2i(width, height)/2;
     }
-    void Run() {
-        vec2i moveTo = pos;
+    void ResetVisited() {
+        for (i32 y = 0; y < height; y++) {
+            for (i32 x = 0; x < width; x++) {
+                vec2i pos = {x, y};
+                u8& b = Board(pos);
+                if (b == TILE_VISITED) {
+                    if (pos == start) {
+                        b = TILE_START;
+                    } else if (pos == oxygenSystem) {
+                        b = TILE_OXYGEN_SYSTEM;
+                    } else {
+                        b = TILE_EMPTY;
+                    }
+                }
+            }
+        }
+    }
+    bool Go(i64 input) {
+        bool foundOxygen = false;
+        bool first = true;
+        vec2i moveTo = pos + moveDirs[input];
         Array<i64> queuedInputs;
+        queuedInputs.Reserve(7);
+        queuedInputs.Append(input);
+        for (i32 i = 1; i <= 4; i++) {
+            if (InvertMove(i) == input) continue;
+            if (Board(moveTo+moveDirs[i]) == TILE_UNKNOWN) {
+                queuedInputs.Append(i);
+                queuedInputs.Append(InvertMove(i));
+            }
+        }
         while (true) {
             Ret ret;
             ret = RunProgram(program);
             if (ret.halt) {
                 cout << "Unexpected program halt!" << std::endl;
-                return;
+                return false;
             }
-            bool draw = false;
             if (ret.input != nullptr) {
-                bool tryagain = true;
-                while (tryagain) {
-                    tryagain = false;
-                    if (queuedInputs.size > 0) {
-                        *ret.input = queuedInputs[0];
-                        queuedInputs.Erase(0);
-                        moveTo = pos + moveDirs[*ret.input];
-                        break;
-                    }
-                    cout << "Enter a direction(u, d, l, r): " << std::flush;
-                    char c;
-                    std::cin >> c;
-                    switch (c) {
-                        case 'u':
-                            *ret.input = MOVE_UP;
-                            queuedInputs.Append({MOVE_LEFT,MOVE_RIGHT,MOVE_RIGHT,MOVE_LEFT,MOVE_UP,MOVE_DOWN});
-                            break;
-                        case 'd':
-                            *ret.input = MOVE_DOWN;
-                            queuedInputs.Append({MOVE_LEFT,MOVE_RIGHT,MOVE_RIGHT,MOVE_LEFT,MOVE_DOWN,MOVE_UP});
-                            break;
-                        case 'l':
-                            *ret.input = MOVE_LEFT;
-                            queuedInputs.Append({MOVE_UP,MOVE_DOWN,MOVE_DOWN,MOVE_UP,MOVE_LEFT,MOVE_RIGHT});
-                            break;
-                        case 'r':
-                            *ret.input = MOVE_RIGHT;
-                            queuedInputs.Append({MOVE_UP,MOVE_DOWN,MOVE_DOWN,MOVE_UP,MOVE_RIGHT,MOVE_LEFT});
-                            break;
-                        case 'q':
-                            cout << "Quitting..." << std::endl;
-                            return;
-                        default:
-                            tryagain = true;
-                            break;
-                    }
-                    if (tryagain) {
-                        cout << "Invalid input." << std::endl;
-                        continue;
-                    }
-                    moveTo = pos + moveDirs[*ret.input];
-                    cout << c << std::endl;
-                }
+                *ret.input = queuedInputs[0];
+                queuedInputs.Erase(0);
+                moveTo = pos + moveDirs[*ret.input];
             } else {
                 switch (ret.output) {
                     case STATUS_HIT_WALL: {
@@ -301,27 +309,133 @@ struct Droid {
                     } break;
                     case STATUS_MOVED_TO_OXYGEN_SYSTEM:
                         oxygenSystem = moveTo;
+                        if (first) {
+                            foundOxygen = true;
+                        }
                         // Fall through
                     case STATUS_MOVED: {
                         Board(moveTo) = TILE_DROID;
-                        if (pos == start) {
-                            Board(pos) = TILE_START;
-                        } else if (pos == oxygenSystem) {
-                            Board(pos) = TILE_OXYGEN_SYSTEM;
+                        if (first) {
+                            Board(pos) = TILE_VISITED;
                         } else {
-                            Board(pos) = TILE_EMPTY;
+                            if (pos == start) {
+                                Board(pos) = TILE_START;
+                            } else if (pos == oxygenSystem) {
+                                Board(pos) = TILE_OXYGEN_SYSTEM;
+                            } else {
+                                Board(pos) = TILE_EMPTY;
+                            }
                         }
                         pos = moveTo;
                     } break;
                     default:
                         cout << "Unexpected output: " << ret.output << std::endl;
-                        return;
+                        return false;
                 }
-                if (queuedInputs.size == 0) draw = true;
+                first = false;
+                if (queuedInputs.size == 0) break;
             }
-            if (draw) {
-                DrawBoard();
+        }
+        if (showProgress) {
+            DrawBoard();
+            Thread::Sleep(Milliseconds(20));
+        }
+        return foundOxygen;
+    }
+
+    bool FindOxygenSystem(Array<i64> &moveLog) {
+        while (true) {
+            i32 possibleDirections = 0;
+            bool directions[4] = {false, false, false, false};
+            for (i32 i = 1; i <= 4; i++) {
+                if (Traversible((Tile)Board(pos+moveDirs[i]))) {
+                    possibleDirections++;
+                    directions[i-1] = true;
+                }
             }
+            if (possibleDirections == 0) {
+                return false; // dead end
+            } else if (possibleDirections == 1) {
+                // Only one way to go
+                for (i32 i = 0; i < 4; i++) {
+                    if (directions[i]) {
+                        i64 move = i+1;
+                        moveLog.Append(move);
+                        if (Go(move)) return true;
+                        break;
+                    }
+                }
+            } else {
+                // Time for branching
+                for (i32 i = 0; i < 4; i++) {
+                    if (directions[i]) {
+                        i64 move = i+1;
+                        Array<i64> newMoveLog;
+                        if (Go(move)) {
+                            moveLog.Append(move);
+                            return true;
+                        }
+                        newMoveLog.Append(move);
+                        if (FindOxygenSystem(newMoveLog)) {
+                            moveLog.Append(newMoveLog);
+                            return true;
+                        }
+                        for (i32 i = newMoveLog.size-1; i >= 0; i--) {
+                            Go(InvertMove(newMoveLog[i]));
+                        }
+                    }
+                }
+            }
+        }
+        return false;
+    }
+
+    void FindFurthestPointFromWhereWeAre(Array<i64> &moveLog) {
+        i32 myTraversedInLog = 0;
+        while (true) {
+            i32 possibleDirections = 0;
+            bool directions[4] = {false, false, false, false};
+            for (i32 i = 1; i <= 4; i++) {
+                if (Traversible((Tile)Board(pos+moveDirs[i]))) {
+                    possibleDirections++;
+                    directions[i-1] = true;
+                }
+            }
+            if (possibleDirections == 0) {
+                break;
+            } else if (possibleDirections == 1) {
+                // Only one way to go
+                for (i32 i = 0; i < 4; i++) {
+                    if (directions[i]) {
+                        i64 move = i+1;
+                        moveLog.Append(move);
+                        myTraversedInLog = moveLog.size;
+                        Go(move);
+                        break;
+                    }
+                }
+            } else {
+                // Time for branching
+                Array<i64> bestMoveLog;
+                for (i32 i = 0; i < 4; i++) {
+                    if (directions[i]) {
+                        i64 move = i+1;
+                        Array<i64> newMoveLog;
+                        Go(move);
+                        newMoveLog.Append(move);
+                        FindFurthestPointFromWhereWeAre(newMoveLog);
+                        if (newMoveLog.size > bestMoveLog.size) {
+                            bestMoveLog = newMoveLog;
+                        }
+                    }
+                }
+                myTraversedInLog = moveLog.size;
+                moveLog.Append(bestMoveLog);
+                break;
+            }
+        }
+        for (i32 i = myTraversedInLog-1; i >= 0; i--) {
+            Go(InvertMove(moveLog[i]));
         }
     }
 };
@@ -340,7 +454,23 @@ int main() {
     }
     Droid droid;
     droid.Reset();
-    droid.Run();
+    Array<i64> moveLog;
+    droid.Go(MOVE_LEFT); // Get our inital view of the area
+    droid.Go(MOVE_RIGHT); // Get our inital view of the area
+    if (!droid.FindOxygenSystem(moveLog)) {
+        cout << "Didn't find the Oxygen System!" << std::endl;
+        return 1;
+    }
+
+    cout << "Part 1: Total length of path to Oxygen System: " << moveLog.size << std::endl;
+
+    droid.ResetVisited();
+
+    moveLog.Clear();
+    // droid.showProgress = true;
+    droid.FindFurthestPointFromWhereWeAre(moveLog);
+
+    cout << "Part 2: Max distance from Oxygen System: " << moveLog.size << std::endl;
 
     cout << "Total time taken: " << FormatTime(Clock::now() - start) << std::endl;
 
