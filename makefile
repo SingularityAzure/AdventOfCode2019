@@ -1,9 +1,9 @@
 CC = g++ -O2 -DNDEBUG
 CFLAGS = -std=c++17 -L/home/singularity/lib -lAzCoreLinux
 
-.PHONY: all day01 day02 day03 day04 day05 day06 day07 day08 day09 day10 day11 day12 day13 day14 day15 day16
+.PHONY: all day01 day02 day03 day04 day05 day06 day07 day08 day09 day10 day11 day12 day13 day14 day15 day16 day17
 
-all: day01 day02 day03 day04 day05 day06 day07 day08 day09 day10 day11 day12 day13 day14 day15 day16
+all: day01 day02 day03 day04 day05 day06 day07 day08 day09 day10 day11 day12 day13 day14 day15 day16 day17
 
 day01: Day01/main.cpp
 	$(CC) Day01/main.cpp $(CFLAGS) -o Day01/day01
@@ -68,3 +68,7 @@ day15: Day15/main.cpp
 day16: Day16/main.cpp
 	$(CC) Day16/main.cpp $(CFLAGS) -o Day16/day16
 	Day16/day16
+
+day17: Day17/main.cpp
+	$(CC) Day17/main.cpp $(CFLAGS) -o Day17/day17
+	Day17/day17
