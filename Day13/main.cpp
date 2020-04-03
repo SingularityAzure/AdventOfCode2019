@@ -209,9 +209,10 @@ int main() {
 
     { // Read instructions from input.txt
         Array<char> inputText = FileContents("Day13/input.txt");
-        Array<Range<char>> instructions = SeparateByValues(&inputText, {','});
+        Array<Range<char>> instructions = SeparateByValues(&inputText, {',', '\n'});
         input.Reserve(instructions.size);
         for (Range<char> &range : instructions) {
+            if (range.size == 0) continue;
             input.Append(StringToI64(range));
         }
     }

@@ -2,9 +2,10 @@ Array<i64> input;
 
 void GetInput(String filename) {
     Array<char> inputText = FileContents(filename);
-    Array<Range<char>> instructions = SeparateByValues(&inputText, {','});
+    Array<Range<char>> instructions = SeparateByValues(&inputText, {',', '\n'});
     input.Reserve(instructions.size);
     for (Range<char> &range : instructions) {
+        if (range.size == 0) continue;
         input.Append(StringToI64(range));
     }
 }
